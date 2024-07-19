@@ -1,0 +1,58 @@
+version: '1.0'
+services:
+  elasticsearch:
+    image: elasticsearch:7.17.1
+    container_name: elk_elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=changeme
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - elk
+
+  kibana:
+    image: kibana:7.17.1
+    container_name: elk_kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elk_elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana
+      - ELASTICSEARCH_PASSWORD=changeme
+      - ELASTICSEARCH_SSL_VERIFICATIONMODE=none
+      - I18N_LOCALE=zh-CN
+    ports:
+      - 5601:5601
+    networks:
+      - elk
+
+  filebeat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: elk_filebeat
+    volumes:
+      - /home/logs:/var/log:ro
+      - filebeat-data:/usr/share/filebeat/data
+    networks:
+      - elk
+
+volumes:
+  esdata:
+    driver: local
+  filebeat-data:
+    driver: local
+
+networks:
+  elk:
+    driver: bridge

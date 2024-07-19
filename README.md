@@ -1,0 +1,2 @@
+# elk_for_odoo_log
+搭建ELK环境使用kibana来查询odoo日志
